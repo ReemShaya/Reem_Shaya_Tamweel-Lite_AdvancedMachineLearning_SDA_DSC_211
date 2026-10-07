@@ -32,8 +32,9 @@ Below is the executive summary of the production model selection, calibrated ope
 
 ---
 <img width="1662" height="647" alt="111" src="https://github.com/user-attachments/assets/983b1cb9-242b-4da5-8137-c7e9f69506d4" />
-
-
+ 
+---
+ 
 ## Problem Formulation
 
 | Constraint / Variable | Operational Specification |
@@ -45,9 +46,10 @@ Below is the executive summary of the production model selection, calibrated ope
 | **Historical Development Set** | 10,000 applications (2022–2024) · Default Rate: 7.89% |
 | **Out-of-Time Challenge Set** | 2,500 distinct applications (2025) · Unlabeled |
 | **Evaluation Loss Function** | `Custom Loss = 10(FN) + 1(FP)` |
-
-
-## Development Roadmap & Daily Deliverables
+ 
+---
+ 
+## Five-day Development Roadmap & Daily Deliverables
 
 | Phase | Core Objective | Primary Artifacts & Evidence |
 |:---:|---|---|
@@ -57,25 +59,13 @@ Below is the executive summary of the production model selection, calibrated ope
 | **Day 4** | Model Explainability (SHAP/Permutation), Calibration & Stability | `INTERPRETABILITY_REPORT.md` |
 | **Day 5** | Ensemble Worth-It Evaluation, Final Policy & Submission Delivery | `ENSEMBLE_DECISION.md`, `MODEL_CARD.md`, `submission.csv` |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
+ 
 ## Key results
 
-### Independent comparison-set evaluation
+### Day 1 — Fair model comparison
 
-The baseline and candidate models were evaluated on an independent, holdout comparison set of 2,000 unseen loan applications using strict time-based split to prevent data leakage.
+When evaluated on the independent 2,000-application comparison set, all three algorithms demonstrated competitive ranking performance:
 
 | Metric | Logistic Regression | XGBoost | LightGBM | Stacking Ensemble (Final) |
 |---|---|---|---|---|
@@ -84,7 +74,7 @@ The baseline and candidate models were evaluated on an independent, holdout comp
 | **Brier Score (Calibration)** | 0.0682 | 0.0645 | 0.0651 | **0.0612** |
 | **Inference Latency** | 0.05 ms/app | 0.28 ms/app | 0.14 ms/app | 0.45 ms/app |
 
-*The primary predictive drivers identified by SHAP and Permutation Importance were `bureau_score`, `income_to_debt_ratio`, `past_delinquencies`, and `employment_length`.*
+*Key Takeaway:* Logistic Regression achieved comparable ROC-AUC to the complex gradient boosters while running in a fraction of the time. It was selected as the Day 1 leading candidate, a choice later validated under full temporal cross-validation on Day 5.
 
 <img width="1722" height="645" alt="222" src="https://github.com/user-attachments/assets/3153f48a-3ab3-47c9-8634-09a9e0b1fafe" />
 
