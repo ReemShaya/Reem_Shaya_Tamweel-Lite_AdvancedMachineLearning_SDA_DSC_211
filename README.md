@@ -1,43 +1,6 @@
 <div align="center">
 
-# SDA-DSC-211 · Advanced Machine Learning Methods  
-# Tamweel Lite
-
-
-## Start here | ابدأ هنا
-
-<table>
-<tr>
-<td width="50%" valign="top" dir="ltr">
-
-1. Read [START_HERE.md](START_HERE.md).
-2. Complete the [readiness guide](READINESS_GUIDE.md).
-3. Open [Notebook 00 in Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/00_readiness_check.ipynb).
-4. Save a copy of each notebook in your own repository before editing it.
-5. Keep code, reports and actual output files; screenshots alone are not sufficient evidence.
-
-**Required accounts:** a free Google account for Colab and a free GitHub account for project storage.
-
-</td>
-<td width="50%" valign="top" dir="rtl">
-
-1. اقرأ [START_HERE.md](START_HERE.md).
-2. أكمل [دليل الاستعداد](READINESS_GUIDE.md).
-3. افتح [دفتر 00 في Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/00_readiness_check.ipynb).
-4. احفظ نسخة من كل دفتر داخل مستودعك قبل تعديله.
-5. احتفظ بالكود والتقارير وملفات المخرجات الفعلية؛ لا تكفي لقطات الشاشة وحدها كدليل.
-
-**الحسابات المطلوبة:** حساب Google مجاني لفتح Colab وحساب GitHub مجاني لحفظ المشروع.
-
-</td>
-</tr>
-</table>
-
-## Five-day build | البناء خلال خمسة أيام
-
-| Day | English focus and evidence | المحور والدليل بالعربية | Lab |
-|---:|---|---|---|
-| 1 | Baseline, XGBoost and LightGBM; model comparison and learner observations | خط الأساس وXGBoost وLightGBM؛ مقارنة النماذج وملاحظات المتدرب | [Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/01_baseline_boosting.ipynb) · [Guide](DAY1_GUIDE.md) |
+tGBM; model comparison and learner observations | خط الأساس وXGBoost وLightGBM؛ مقارنة النماذج وملاحظات المتدرب | [Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/01_baseline_boosting.ipynb) · [Guide](DAY1_GUIDE.md) |
 | 2 | Honest validation, leakage control and bounded Optuna search; validation evidence | التحقق الصادق ومنع التسرب والبحث المحدود بـOptuna؛ أدلة التحقق | [Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/02_validation_tuning.ipynb) · [Guide](DAY2_GUIDE.md) |
 | 3 | Imbalance, OOF probabilities, simulated decision cost and capacity; Decision Card | عدم التوازن واحتمالات OOF وتكلفة القرار التعليمية والسعة؛ بطاقة القرار | [Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/03_cost_sensitive_decision.ipynb) · [Guide](DAY3_GUIDE.md) |
 | 4 | Permutation importance, SHAP, calibration and stability; interpretation report | أهمية التبديل وSHAP والمعايرة والاستقرار؛ تقرير التفسير | [Colab](https://colab.research.google.com/github/almiyead-rgb/sda-dsc-211-student-template/blob/main/notebooks/04_explain_calibrate.ipynb) · [Guide](DAY4_GUIDE.md) |
