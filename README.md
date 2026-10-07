@@ -31,6 +31,45 @@ Below is the executive summary of the production model selection, calibrated ope
 | **Challenge Performance** | *Not claimed* — Test labels are intentionally held out |
 
 ---
+<img width="1662" height="647" alt="111" src="https://github.com/user-attachments/assets/983b1cb9-242b-4da5-8137-c7e9f69506d4" />
+
+
+## Problem Formulation
+
+| Constraint / Variable | Operational Specification |
+|---|---|
+| **Business Objective** | Prioritize high-risk credit applications for manual audit under a 12% capacity limit |
+| **Target Variable** | `default_within_90d` (Default event within 90 days of application) |
+| **Asymmetric Cost Matrix** | **10 × FN** (Missed Default) vs. **1 × FP** (False Alarm Audit) |
+| **Review Capacity Cap** | Max **12%** of total volume per period |
+| **Historical Development Set** | 10,000 applications (2022–2024) · Default Rate: 7.89% |
+| **Out-of-Time Challenge Set** | 2,500 distinct applications (2025) · Unlabeled |
+| **Evaluation Loss Function** | `Custom Loss = 10(FN) + 1(FP)` |
+
+
+## Development Roadmap & Daily Deliverables
+
+| Phase | Core Objective | Primary Artifacts & Evidence |
+|:---:|---|---|
+| **Day 1** | Baseline Benchmarking & Gradient Boosting Comparison | `day1_model_comparison.csv`, ROC/PR & Learning Curve Plots |
+| **Day 2** | Data Leakage Prevention, Temporal/Group Split & Optuna Tuning | `leakage_audit.csv`, `fold_audit.csv`, `validation_summary.csv` |
+| **Day 3** | Imbalance Handling, Cost-Sensitive Thresholds & Capacity Auditing | `DECISION_CARD.md`, `threshold_metrics.json` |
+| **Day 4** | Model Explainability (SHAP/Permutation), Calibration & Stability | `INTERPRETABILITY_REPORT.md` |
+| **Day 5** | Ensemble Worth-It Evaluation, Final Policy & Submission Delivery | `ENSEMBLE_DECISION.md`, `MODEL_CARD.md`, `submission.csv` |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Key results
 
@@ -47,15 +86,19 @@ The baseline and candidate models were evaluated on an independent, holdout comp
 
 *The primary predictive drivers identified by SHAP and Permutation Importance were `bureau_score`, `income_to_debt_ratio`, `past_delinquencies`, and `employment_length`.*
 
+<img width="1722" height="645" alt="222" src="https://github.com/user-attachments/assets/3153f48a-3ab3-47c9-8634-09a9e0b1fafe" />
+
 ### Threshold strategy & cost-sensitive policy
 
-Using a cost-sensitive decision matrix (where missing a default is estimated at $1,000 loss vs. $50 administrative cost for manual review), operating thresholds were evaluated against a 15% team review capacity constraint.
+Operating thresholds were evaluated against the internal manual review capacity constraint (capped at 12% max review rate).
 
-- **Optimal Operating Threshold:** `0.22` (Optimized for maximum Expected Monetary Value / Minimum Total Cost).
-- **Flagged for Secondary Review:** 14.8% of incoming applications (fits within review budget).
-- **Default Recall at Threshold:** ~78.4% of actual 90-day defaults flagged prior to approval.
+- **Optimal Operating Threshold:** `0.1223` (Calibrated probability scale; equivalent to `0.1689` raw OOF score).
+- **Flagged for Secondary Review:** `11.7%` of incoming applications during peak periods (fully compliant with the 12% capacity cap).
+- **Default Recall at Threshold:** `46.9%` of actual 90-day defaults flagged prior to approval (caught 84 out of 179 actual defaults in OOF evaluation).
+- **Challenge Batch Allocation:** Out of 2,500 unseen applications, 330 exceeded the raw threshold, and exactly 300 were flagged under the strict capacity cap.
 
-![Decision Threshold and Cost Analysis](reports/figures/day3_threshold_cost_analysis.png)
+<img width="1682" height="611" alt="333" src="https://github.com/user-attachments/assets/53c54014-d145-45a3-914c-33e85df1f4d1" />
+
 
 ### Model explainability & stability
 
@@ -92,16 +135,6 @@ An end-to-end tabular machine-learning project that predicts a **synthetic finan
  
 ![Ensemble comparison](artifacts/day5_ensemble_comparison.png)
  
----
- 
-## The problem
- 
-A lender must decide which new applications a limited review team should examine. Missing a future default (false negative) is treated as **10× as costly** as reviewing a customer who would have repaid (false positive), and the team can review at most **12% of applications in each period**.
- 
-- **Target:** `default_within_90d = 1` — a synthetic default within 90 days *after* the application (not "90 days past due").
-- **Training data:** 10,000 applications (2022–2024), 7.89% positive.
-- **Challenge data:** 2,500 later applications (2025) from separate customers, without labels.
-- **Educational loss:** `10 × FN + 1 × FP`, in teaching units only.
 ---
  
 ## Five-day build
