@@ -1,43 +1,8 @@
 <div align="center">
 
 # SDA-DSC-211 · Advanced Machine Learning Methods  
-# أساليب تعلم الآلة المتقدمة
+# Tamweel Lite
 
-**Tamweel Lite student project | مشروع المتدرب Tamweel Lite**
-
-[Learning portal](https://almiyead-rgb.github.io/advanced-machine-learning-methods-sda-dsc-211/) · [Arabic portal](https://almiyead-rgb.github.io/advanced-machine-learning-methods-sda-dsc-211/ar.html) · [English portal](https://almiyead-rgb.github.io/advanced-machine-learning-methods-sda-dsc-211/en.html)
-
-[![Environment Check](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/validate.yml/badge.svg)](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/validate.yml)
-[![Notebook Smoke Test](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/notebook_smoke.yml/badge.svg)](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/notebook_smoke.yml)
-[![Bilingual Content Check](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/bilingual_content_check.yml/badge.svg)](https://github.com/almiyead-rgb/sda-dsc-211-student-template/actions/workflows/bilingual_content_check.yml)
-
-</div>
-
-<!-- BILINGUAL:EN -->
-<!-- BILINGUAL:AR -->
-
-<table>
-<tr>
-<td width="50%" valign="top" dir="ltr">
-
-## Your project workspace
-
-Use this template to build one connected project across five days. Select **Use this template → Create a new repository**, then keep your notebooks, reports, evidence and final presentation in your own repository.
-
-The status badges above check the template and automated workflows. A green badge does not award a grade and does not prove that your individual project is complete.
-
-</td>
-<td width="50%" valign="top" dir="rtl">
-
-## مساحة مشروعك
-
-استخدم هذا القالب لبناء مشروع واحد مترابط خلال خمسة أيام. اختر **Use this template → Create a new repository**، ثم احفظ دفاترك وتقاريرك وأدلتك وعرضك النهائي في مستودعك الخاص بالمشروع.
-
-تفحص مؤشرات الحالة أعلاه القالب ومسارات الأتمتة. لا يمنح اللون الأخضر درجة ولا يثبت اكتمال مشروعك الفردي.
-
-</td>
-</tr>
-</table>
 
 ## Start here | ابدأ هنا
 
