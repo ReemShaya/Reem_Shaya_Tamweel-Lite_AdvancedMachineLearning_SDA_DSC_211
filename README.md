@@ -149,7 +149,13 @@ Model explainability and probability calibration were evaluated on the Day 4 wei
  
 ### Day 5 — Ensemble Worth-It Gate & Final Model Selection
 
-To evaluate whether complex ensembling beats a single model, candidate models were tested using nested forward out-of-fold (OOF) cross-validation. An ensemble was required to achieve a positive performance lift (`lift_vs_single > 0`) over the best single model without degrading calibration metrics.
+To evaluate whether constructing a complex ensemble model provides a genuine performance advantage, three single baseline models and three ensemble architectures were benchmarked using nested out-of-fold (OOF) cross-validation across three temporal evaluation windows (2023Q1, 2023Q3, and 2024Q1). 
+
+Under the strict **Worth-It Gate** policy, an ensemble candidate must deliver a positive performance improvement (`lift_vs_single > 0`) over the top single model without causing any degradation in probability calibration metrics (`Brier` and `ECE`).
+
+#### Candidate Models Benchmarking
+
+The primary evaluation metrics for all tested architectures are presented in the table below:
 
 | Candidate Model | Mean AP | Fold SD | Mean Brier | Mean ECE | Lift vs. Single | Passes Gate? |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -160,9 +166,11 @@ To evaluate whether complex ensembling beats a single model, candidate models we
 | **XGBoost** | 0.35263 | ±0.02904 | 0.06566 | 0.02276 | -0.03903 | **False** |
 | **LightGBM** | 0.34549 | ±0.04348 | 0.06608 | 0.02311 | -0.04617 | **False** |
 
-*Decision & Key Takeaways:*
-- **Failed Gate Criteria:** None of the ensemble candidates produced a positive lift (`lift_vs_single < 0` for all), causing every ensemble architecture to fail the Worth-It Gate (`passes_gate = False`).
-- **Final Model Choice: KEEP SINGLE (Logistic Regression)**. It delivered the highest out-of-fold average precision (`0.39166`), excellent calibration (`Brier = 0.06327`), zero prediction latency, and complete regulatory transparency.
+![Ensemble Worth-It Gate Benchmark](artifacts/day5_ensemble_benchmark.png)
+*Figure 1: Cross-validation performance and calibration metrics comparison across single and ensemble candidates.*
+<img width="1313" height="553" alt="777" src="https://github.com/user-attachments/assets/4f3cb097-c273-41ca-be8c-ecf9088b59c7" />
+
+
 
 <img width="1682" height="611" alt="333" src="https://github.com/user-attachments/assets/53c54014-d145-45a3-914c-33e85df1f4d1" />
 
@@ -265,22 +273,29 @@ SHAP and permutation importance explained the **Day 4 weighted LightGBM** in log
  
 These explanations **do not transfer automatically** to the final Logistic Regression. The model card lists rechecking feature contributions on the final model as follow-up work.
  
-### Day 5 — Ensemble Worth-It Gate
- 
-Three single models and three ensembles were compared with nested forward OOF predictions (2,155 rows, folds 2023Q1, 2023Q3, 2024Q1). An ensemble had to beat the best single model by more than one fold SD without worsening Brier or ECE.
- 
-| Candidate | Mean AP | Fold SD | Brier | ECE | Passes gate |
-|---|---:|---:|---:|---:|---|
-| **Logistic** | **0.392** | 0.030 | **0.0633** | 0.019 | Reference |
-| Weighted ensemble | 0.389 | 0.029 | 0.0633 | 0.018 | No |
-| Stacking | 0.383 | 0.029 | 0.0660 | 0.031 | No |
-| Equal average | 0.372 | 0.033 | 0.0643 | 0.020 | No |
-| XGBoost | 0.353 | 0.029 | 0.0657 | 0.023 | No |
-| LightGBM | 0.345 | 0.043 | 0.0661 | 0.023 | No |
- 
-The base models were highly correlated (0.88–0.96), so combining them added little. **Decision: KEEP SINGLE.**
- 
-![Model diversity](artifacts/day5_diversity.png)
+
+
+
+### Day 5 — Ensemble Worth-It Gate & Final Model Selection
+
+To evaluate whether constructing a complex ensemble model provides a genuine performance advantage, three single baseline models and three ensemble architectures were benchmarked using nested out-of-fold (OOF) cross-validation across three temporal evaluation windows (2023Q1, 2023Q3, and 2024Q1).
+
+#### Out-of-Fold Application Scored Probabilities
+
+Prior to evaluating aggregate metrics, application-level out-of-fold predicted default probabilities were generated across all candidate architectures to audit model agreement and variance:
+
+| Application ID | Fold | LightGBM | XGBoost | Logistic Regression | Equal Average | Weighted Ensemble | Stacking Ensemble |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **TR-001160** | 1 | 0.0321 | 0.0444 | 0.0467 | 0.0410 | 0.0461 | 0.0684 |
+| **TR-003137** | 1 | 0.1149 | 0.1798 | 0.1547 | 0.1498 | 0.1610 | 0.1085 |
+| **TR-004529** | 1 | 0.0457 | 0.0854 | 0.0887 | 0.0733 | 0.0879 | 0.0796 |
+| **TR-004666** | 1 | 0.0123 | 0.0150 | 0.0062 | 0.0112 | 0.0084 | 0.0593 |
+| **TR-008372** | 1 | 0.0373 | 0.0538 | 0.0336 | 0.0416 | 0.0387 | 0.0674 |
+
+![Out-of-Fold Application Score Comparison](artifacts/day5_oof_predictions.png)
+*Figure 1: Comparison of out-of-fold scored probabilities across individual models and ensemble variations for sample applications.*
+
+
  
 ### Calibration
  
