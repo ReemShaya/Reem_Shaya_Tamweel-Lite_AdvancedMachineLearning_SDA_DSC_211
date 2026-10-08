@@ -99,6 +99,8 @@ To guarantee realistic out-of-sample performance, features capturing post-decisi
 
 <img width="1453" height="565" alt="444" src="https://github.com/user-attachments/assets/75634129-c946-4a93-afe5-75761b69be60" />
 
+---
+ 
 ### Day 3 — Cost-sensitive threshold under capacity
 
 The operational threshold was evaluated under varying false-negative penalty weights ($FN = 8, 10, 12$) against a strict 12% review capacity constraint, followed by a regional stability audit.
@@ -127,15 +129,40 @@ When deploying the chosen threshold (`0.6583`) across geographic sectors, the ap
 
 <img width="1333" height="493" alt="555" src="https://github.com/user-attachments/assets/383d6666-bb3d-48b4-b7b0-952565e2a8a3" />
 
+---
+ 
+### Day 4 — Interpretation and calibration
 
-### Threshold strategy & cost-sensitive policy ------- lab 5
+Model explainability and probability calibration were evaluated on the Day 4 weighted model using SHAP (SHapley Additive exPlanations) and Permutation Importance in log-odds units to ensure transparency and regulatory compliance.
 
-Operating thresholds were evaluated against the internal manual review capacity constraint (capped at 12% max review rate).
+#### Key Findings & Interpretability
+- **Primary Risk Drivers:** SHAP summary analysis confirmed that credit bureau score (`bureau_score`), income-to-debt metrics, and past delinquency records (`past_delinquencies`) are the dominant features influencing predicted default log-odds.
+- **Probability Calibration:** Raw predicted probabilities were aligned using Isotonic/Sigmoid calibration to ensure that a predicted 10% default risk accurately corresponds to a 10% empirical default rate in production.
+- **Model Stability (PSI):** Population Stability Index (PSI) remained well below the `0.10` drift threshold across temporal validation windows, confirming that feature distributions remained stable over time.
 
-- **Optimal Operating Threshold:** `0.1223` (Calibrated probability scale; equivalent to `0.1689` raw OOF score).
-- **Flagged for Secondary Review:** `11.7%` of incoming applications during peak periods (fully compliant with the 12% capacity cap).
-- **Default Recall at Threshold:** `46.9%` of actual 90-day defaults flagged prior to approval (caught 84 out of 179 actual defaults in OOF evaluation).
-- **Challenge Batch Allocation:** Out of 2,500 unseen applications, 330 exceeded the raw threshold, and exactly 300 were flagged under the strict capacity cap.
+*Note on Transferability:* These SHAP feature explanations were generated specifically for the tree-based model. As documented in `INTERPRETABILITY_REPORT.md`, these explanations do not transfer automatically to the final Logistic Regression, and rechecking linear feature coefficients is noted as follow-up work in the `MODEL_CARD.md`.
+
+<img width="1279" height="705" alt="666" src="https://github.com/user-attachments/assets/b884f607-321c-438a-979e-a08ec5b098c9" />
+
+
+---
+ 
+### Day 5 — Ensemble Worth-It Gate & Final Model Selection
+
+To evaluate whether complex ensembling beats a single model, candidate models were tested using nested forward out-of-fold (OOF) cross-validation. An ensemble was required to achieve a positive performance lift (`lift_vs_single > 0`) over the best single model without degrading calibration metrics.
+
+| Candidate Model | Mean AP | Fold SD | Mean Brier | Mean ECE | Lift vs. Single | Passes Gate? |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Logistic Regression** | **0.39166** | ±0.02981 | **0.06327** | 0.01882 | **0.00000** | **Reference** |
+| **Weighted Ensemble** | 0.38942 | ±0.02906 | 0.06332 | **0.01772** | -0.00224 | **False** |
+| **Stacking Ensemble** | 0.38314 | ±0.02949 | 0.06603 | 0.03106 | -0.00852 | **False** |
+| **Equal Average** | 0.37170 | ±0.03258 | 0.06435 | 0.02038 | -0.01996 | **False** |
+| **XGBoost** | 0.35263 | ±0.02904 | 0.06566 | 0.02276 | -0.03903 | **False** |
+| **LightGBM** | 0.34549 | ±0.04348 | 0.06608 | 0.02311 | -0.04617 | **False** |
+
+*Decision & Key Takeaways:*
+- **Failed Gate Criteria:** None of the ensemble candidates produced a positive lift (`lift_vs_single < 0` for all), causing every ensemble architecture to fail the Worth-It Gate (`passes_gate = False`).
+- **Final Model Choice: KEEP SINGLE (Logistic Regression)**. It delivered the highest out-of-fold average precision (`0.39166`), excellent calibration (`Brier = 0.06327`), zero prediction latency, and complete regulatory transparency.
 
 <img width="1682" height="611" alt="333" src="https://github.com/user-attachments/assets/53c54014-d145-45a3-914c-33e85df1f4d1" />
 
