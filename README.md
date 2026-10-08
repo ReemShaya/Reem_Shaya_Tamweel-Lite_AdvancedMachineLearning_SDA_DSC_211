@@ -291,268 +291,85 @@ The final model was deployed on the 2,500-application challenge dataset (`submis
 
 
 
+### Interpretation & Operational Limitations
 
+- **Evaluation Methodology:** Model metrics and development insights are based on out-of-fold (OOF) cross-validation predictions. These results serve as developmental benchmarks rather than an untouched, independent test set.
+- **Threshold Selection In-Sample Bias:** The operational threshold was optimized on the same OOF labels used to compute decision loss, meaning the reported loss (1,111 units) represents an optimistic lower bound.
+- **Fold Variability Context:** Reported fold standard deviations reflect performance variance across three overlapping forward temporal folds; they should be interpreted as descriptive dispersion metrics rather than formal confidence intervals.
+- **Post-Hoc Calibration Dynamics:** Applying Sigmoid calibration slightly degraded probability calibration metrics; raw predicted probabilities should remain the primary focus of monitoring.
+- **Challenge Batch Capacity Saturation:** Prior to applying the 12% review cap, 330 applications (13.2%) exceeded the operational threshold. This indicates potential score drift or a higher-risk borrower distribution in the challenge dataset.
+- **Interpretability Model Disconnect:** SHAP feature importance analyses produced on Day 4 reflect tree-based booster dynamics and do not directly translate to the coefficients of the final Logistic Regression model.
+- **Educational Scope Disclaimer:** This model is developed strictly for academic evaluation and must not be used for live financial underwriting or automated credit decisions involving real individuals or territories.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Model explainability & stability
-
-- **Global Interpretability:** SHAP summary plots confirmed `bureau_score` as the dominant feature, with lower scores exponentially increasing default log-odds.
-- **Probability Calibration:** Isotonic regression alignment reduced Brier score from 0.068 to 0.061, ensuring predicted default probabilities match observed historical default rates.
-- **Temporal Stability:** Population Stability Index (PSI) remained < 0.10 across split windows, verifying model stability against temporal drift.
-
-![SHAP Feature Importance & Summary Plot](reports/figures/day4_shap_summary.png)
-
-
-
-
-# Tamweel Lite — Cost-Aware Credit-Risk Review Policy
- 
-An end-to-end tabular machine-learning project that predicts a **synthetic financing default within 90 days of application**, validates honestly across time and customers, selects a cost-sensitive decision threshold under a **12% review capacity**, checks calibration and interpretability, and delivers a reproducible final batch policy.
- 
-**Course:** SDA-DSC-211 — Advanced Machine Learning Methods (SDAIA Academy) · **Project type:** Individual five-day project
- 
-> **Educational use only.** All data is fully synthetic. A flag (`decision = 1`) means *refer for review* in a simulation. It is not an approval, a refusal or a statement about any real person or region.
- 
 ---
- 
-## Final decision at a glance
- 
-| Item | Result |
-|---|---|
-| Final model | **Logistic Regression** (KEEP SINGLE) |
-| Mean OOF Average Precision | **0.392** (fold SD 0.030) |
-| Decision rule | `probability >= 0.1223` (calibrated scale; raw OOF threshold 0.1689) |
-| OOF recall / precision at threshold | **46.9%** / 34.3% (84 of 179 defaults caught) |
-| Busiest-period flag rate (OOF) | 11.7% — within the 12% cap in all three periods |
-| Challenge batch | 2,500 applications → 330 above threshold → **300 flagged** (cap applied) |
-| Challenge performance | **Not claimed** — challenge labels are unavailable |
- 
-![Ensemble comparison](artifacts/day5_ensemble_comparison.png)
- 
+
+### Production Monitoring & Governance Plan
+
+1. **Pre-Cap Volatility Tracking:** Continuously monitor each incoming batch's pre-capped flag rate against the 12% operational review threshold.
+2. **Drift Detection:** Audit probability score distributions and empirical default prevalence over time to identify systemic population drift.
+3. **Maturity Recalibration (90-Day Window):** As actual 90-day loan outcomes mature, re-evaluate AP, Brier Score, and ECE. Review whether post-hoc Sigmoid transformations should be formally retired via a governed release update.
+4. **Regional Fairness Audits:** Track regional false-positive rates (FPR) and default recall against true baseline denominators, paying specific attention to variance in the Western territory.
+5. **Strict Retraining Separation:** Develop, validate, and recalibrate any future candidate model or threshold updates strictly on newly matured data partitions—never on active scoring batches.
+
 ---
- 
-## Five-day build
- 
-| Day | Focus | Key evidence |
-|---:|---|---|
-| 1 | Baseline vs. gradient boosting | `day1_model_comparison.csv`, ROC/PR and learning curves |
-| 2 | Leakage audit, time- and customer-aware validation, bounded Optuna search | `leakage_audit.csv`, `fold_audit.csv`, `validation_summary.csv` |
-| 3 | Class imbalance, threshold sweep, capacity and regional audit | `DECISION_CARD.md`, `threshold_metrics.json` |
-| 4 | SHAP, permutation importance, calibration and stability | `INTERPRETABILITY_REPORT.md` |
-| 5 | Worth-It Gate for ensembles, final model, batch policy and delivery | `ENSEMBLE_DECISION.md`, `MODEL_CARD.md`, `submission.csv` |
- 
+
+### Repository Architecture
+
+├── README.md                     # Main project overview & documentation
+├── MODEL_CARD.md                 # Final model card & technical specifications
+├── DECISION_CARD.md              # Operational threshold & capacity decision card
+├── INTERPRETABILITY_REPORT.md    # Feature importance & calibration diagnostics
+├── ENSEMBLE_DECISION.md          # Day 5 Worth-It Gate evaluation report
+├── submission.csv                # Scored challenge applications (id, probability, decision)
+├── metrics.json                  # Final model benchmarks & batch audit outputs
+├── notebooks/                    # Executed Colab notebooks (00, 01–05, 99)
+├── artifacts/                    # Figures, JSON/CSV exports, & model binaries
+│   ├── final_model/              # Exported production model artifacts
+│   └── final_policy.json         # Frozen operational threshold & batch rules
+├── evidence/                     # Bundled daily evidence artifacts
+│   ├── day1/                     # Baseline comparison, ROC/AP curves, run logs
+│   ├── day2/                     # Target leakage audits, cross-validation summaries
+│   ├── day3/                     # Threshold sweeps, capacity constraints, regional audits
+│   └── day4/                     # SHAP plots, permutation importance, stability
+├── reports/                      # Automated lab execution reports
+├── submission/                   # Final submission files & verification manifests
+├── tamweel/                      # Standalone Python inference package
+├── scripts/                      # Automated pipeline, scoring, & replay utilities
+├── data/                         # Synthetic course datasets & data contracts
+└── presentation/                 # Project presentation deck (PDF)
+
+
 ---
- 
-## Key results
- 
-### Day 1 — Fair model comparison
- 
-On the same 2,000-row comparison split, the three models were close in ranking quality:
- 
-| Model | ROC-AUC | AP | Train time |
-|---|---:|---:|---:|
-| Logistic Regression | 0.821 | 0.326 | 0.06 s |
-| XGBoost | 0.812 | 0.334 | 0.45 s |
-| LightGBM | 0.814 | 0.325 | 0.29 s |
- 
-Logistic Regression matched the boosters at a fraction of the cost, so it was the Day 1 candidate. Day 5 later confirmed this choice under stricter validation.
- 
-![Day 1 ROC and PR curves](artifacts/day1_roc_pr.png)
- 
-### Day 2 — Honest validation and leakage control
- 
-Two columns (`days_past_due_60`, `collection_calls`) record information *after* the decision date. Including them produced an almost perfect, and meaningless, score:
- 
-| Validation scheme | Mean AP |
-|---|---:|
-| Leaky random split (control) | 0.999 |
-| Clean random split | 0.311 |
-| Clean time + customer split, fixed parameters | **0.315** |
-| Clean time + customer split, tuned (Optuna) | 0.313 |
- 
-The honest scheme keeps customers separate, requires every training label to mature for 90 days before the validation period starts, and fits imputers inside each fold. The bounded Optuna search did not beat the fixed configuration, so the simpler setup was kept.
- 
-![Validation comparison](artifacts/day2_validation_comparison.png)
- 
-### Day 3 — Cost-sensitive threshold under capacity
- 
-| Threshold | Loss units | Flag rate | Feasible under 12%? |
-|---|---:|---:|---|
-| Default 0.5 | 2,403 | 19.9% | No |
-| Unconstrained minimum loss (0.449) | 2,275 | 22.6% | No |
-| **Chosen, minimum loss within capacity (0.658)** | **2,639** | 10.4% | **Yes** |
- 
-The chosen threshold costs 236 more units than 0.5. That is the price of respecting capacity, not a saving. The threshold stayed the same when the false-negative cost was varied (8, 10, 12), because capacity, not cost, determines it.
- 
-![Capacity and regions](artifacts/day3_capacity_regions.png)
- 
-### Day 4 — Interpretation and calibration
- 
-SHAP and permutation importance explained the **Day 4 weighted LightGBM** in log-odds units, and calibration was measured on a separate period. Full evidence is in [`INTERPRETABILITY_REPORT.md`](INTERPRETABILITY_REPORT.md).
- 
-These explanations **do not transfer automatically** to the final Logistic Regression. The model card lists rechecking feature contributions on the final model as follow-up work.
- 
 
+### Reproduction & Verification
 
+All notebooks in `notebooks/` run on standard Google Colab CPU runtimes with pre-saved outputs.
 
-### Day 5 — Ensemble Worth-It Gate & Final Model Selection
+To verify that `submission.csv` reproduces identically from the exported model without retraining:
 
-To evaluate whether constructing a complex ensemble model provides a genuine performance advantage, three single baseline models and three ensemble architectures were benchmarked using nested out-of-fold (OOF) cross-validation across three temporal evaluation windows (2023Q1, 2023Q3, and 2024Q1).
-
-#### Out-of-Fold Application Scored Probabilities
-
-Prior to evaluating aggregate metrics, application-level out-of-fold predicted default probabilities were generated across all candidate architectures to audit model agreement and variance:
-
-| Application ID | Fold | LightGBM | XGBoost | Logistic Regression | Equal Average | Weighted Ensemble | Stacking Ensemble |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **TR-001160** | 1 | 0.0321 | 0.0444 | 0.0467 | 0.0410 | 0.0461 | 0.0684 |
-| **TR-003137** | 1 | 0.1149 | 0.1798 | 0.1547 | 0.1498 | 0.1610 | 0.1085 |
-| **TR-004529** | 1 | 0.0457 | 0.0854 | 0.0887 | 0.0733 | 0.0879 | 0.0796 |
-| **TR-004666** | 1 | 0.0123 | 0.0150 | 0.0062 | 0.0112 | 0.0084 | 0.0593 |
-| **TR-008372** | 1 | 0.0373 | 0.0538 | 0.0336 | 0.0416 | 0.0387 | 0.0674 |
-
-![Out-of-Fold Application Score Comparison](artifacts/day5_oof_predictions.png)
-*Figure 1: Comparison of out-of-fold scored probabilities across individual models and ensemble variations for sample applications.*
-
-
- 
-### Calibration
- 
-A sigmoid mapping was fitted on a reserved calibration period (836 rows, 78 defaults). It **did not improve** the probabilities:
- 
-| Metric | Raw | After sigmoid |
-|---|---:|---:|
-| Brier | 0.0765 | 0.0781 |
-| ECE | 0.021 | 0.035 |
-| Log-loss | 0.266 | 0.277 |
-| AP / ROC-AUC | 0.288 / 0.789 | unchanged |
- 
-The mapping preserves order, so the same applications are flagged either way; only the reported probability values change. These are fit diagnostics on the rows used to learn the sigmoid, not an independent evaluation.
- 
-![Calibration fit](artifacts/day5_calibration_fit.png)
- 
-### Batch policy on the challenge set
- 
-The threshold is applied first. Then, if more than 12% pass, only the highest-probability applications up to the cap are kept, and tied scores stay together.
- 
-![Challenge capacity](artifacts/day5_challenge_capacity.png)
- 
-### Regional audit (descriptive)
- 
-| Region | False-positive rate | Recall |
-|---|---:|---:|
-| Eastern | 6.3% | 45.7% |
-| Central | 8.0% | 50.0% |
-| Other | 8.1% | 46.9% |
-| Western | **10.3%** | **44.7%** |
- 
-The western region had the highest false-alarm rate and lowest recall, the same pattern as Day 3. With 35–49 defaults per region this is noisy, and it is not a fairness certificate, but it needs review.
- 
-![Policy by region](artifacts/day5_policy_regions.png)
- 
----
- 
-## Interpretation and limitations
- 
-- Development evidence comes from out-of-fold predictions on data used throughout the course. It is **not an untouched final test**.
-- The threshold was chosen on the same OOF labels used to report its loss, so the loss (1,111 units) is **optimistic**.
-- Fold SD comes from three overlapping forward folds. It is **descriptive**, not a confidence interval.
-- Calibration slightly worsened the probabilities, so the probability values themselves should be monitored.
-- Before capping, the challenge batch exceeded capacity (13.2%), which suggests score drift or a higher-risk batch.
-- Day 4 explanations belong to a different model than the final one.
-- The model must not be used for real financing decisions or for conclusions about real people or regions.
-## Monitoring plan
- 
-- Track each batch's pre-cap flag rate against 12%.
-- Track score distribution and prevalence for drift.
-- After 90-day outcomes mature, recheck AP, Brier and ECE, and whether the sigmoid should be removed through a governed update.
-- Recheck regional false-positive rates and recall with their denominators, especially for the western region.
-- Develop and validate any change to the model or threshold on new data, never on the batch being judged.
----
- 
-## Repository structure
- 
-```
-├── README.md
-├── MODEL_CARD.md                 # final model card
-├── DECISION_CARD.md              # Day 3 threshold decision
-├── INTERPRETABILITY_REPORT.md    # Day 4 explanation and calibration
-├── ENSEMBLE_DECISION.md          # Day 5 Worth-It Gate
-├── submission.csv                # application_id, probability, decision
-├── metrics.json                  # final metrics and batch audit
-├── notebooks/                    # executed notebooks 00, 01–05, 99
-├── artifacts/                    # CSV, JSON and figures from every day
-│   ├── final_model/              # exported final model
-│   └── final_policy.json         # frozen threshold, mapping and batch rule
-├── evidence/                     # each day's exported evidence bundle, as produced
-│   ├── day1/                     # model comparison, curves, reflection, run record
-│   ├── day2/                     # leakage and fold audits, search, validation summary
-│   ├── day3/                     # threshold metrics, sweep, regional audit, Decision Card
-│   └── day4/                     # SHAP, permutation importance, calibration, stability
-├── reports/                      # report copies generated by the labs
-├── submission/                   # submission file and manifest
-├── tamweel/                      # portable inference package (application_id, probability)
-├── scripts/                      # course pipeline, inference and replay
-├── data/                         # synthetic course data and data contract
-└── presentation/                 # five-slide final presentation (PDF)
-```
- 
-## Reproduce
- 
-Each notebook in `notebooks/` runs on free Google Colab CPU and contains its saved outputs.
- 
-To check that the saved submission is reproduced exactly from the exported model, without retraining:
- 
 ```bash
 pip install -r requirements-colab.txt -c constraints.txt
 cd scripts
-python replay_final.py      # prints REPLAY_MATCH on success
-python rebuild_final.py     # full retrain from data; prints REBUILD_MATCH
+python replay_final.py      # Output: REPLAY_MATCH
+python rebuild_final.py     # Full retrain pipeline; Output: REBUILD_MATCH
 ```
- 
-## Data
- 
-The Tamweel Lite data is fully synthetic and was created for the course. It contains no real customers and no real regional or demographic statistics. Monetary values are simulated riyals, and decision losses are educational units.
- 
+
+### Dataset & Synthetic Data Notice
+
+The **Tamweel Lite** dataset was synthetically generated specifically for educational purposes within this program. It contains no genuine customer records, real-world demographic data, or actual financial statistics. All monetary figures represent simulated Saudi Riyals (SAR), and decision losses correspond to synthetic educational cost units.
+
 ---
- 
-## الملخص التنفيذي
- 
-قارنت ثلاثة نماذج منفردة وثلاث طرق تجميع، واخترت الانحدار اللوجستي لأنه حقق أعلى AP (0.392) ولم يتجاوزه أي تجميع بفارق يفوق الانحراف بين الطيات (0.030). العتبة تلتقط 46.9% من حالات التعثر ضمن سعة 12% في كل فترة. لم تحسّن معايرة sigmoid الاحتمالات. في دفعة التحدي تجاوزت 330 حالة العتبة فاحتُفظ بأعلى 300 فقط. تحتاج فجوة المنطقة الغربية إلى مراجعة، والنتائج تعليمية على بيانات اصطناعية.
- 
+
+### الملخص التنفيذي
+
+تمت مقارنة ثلاثة نماذج فردية وثلاثة أساليب تجميعية (Ensemble)، وتَمّ اختيار **الانحدار اللوجستي (Logistic Regression)** كنموذج نهائي للإنتاج لتحقيقه أعلى متوسط دقة (Mean AP = 0.392)، حيث لم يستطع أي نموذج تجميعي تتويجه بزيادة تفوق الانحراف المعياري عبر الطيات (0.030). تحقق عتبة القرار التشغيلية المحددة (`0.1689`) نسبة التقاط للتعثر قدرها **46.9%** مع الالتزام التام بسقف المراجعة اليدوية المسموح به (12%) عبر جميع الفترات الزمنية. أظهرت الفحوصات أن المعايرة باستخدام دالة Sigmoid لم تحسّن جودة الاحتمالات المخرجة. وفي دفعة التحدي النهائية، تجاوزت 330 حالة عتبة التأهل، فتم تطبيق سياسة الحسم والاحتفاظ بأعلى 300 حالة فقط لتغطية السعة المتاحة (12%). توجد فجوة أداء بسيطة في المنطقة الغربية تتطلب مراقبة مستمرة، وتظل جميع هذه النتائج تعليمية ومبنية على بيانات اصطناعية.
+
 ---
- 
-## Training-program attribution
- 
-This project was completed for the **Advanced Machine Learning Methods (SDA-DSC-211)** project, delivered by **SDAIA Academy via Learning Space** as a five-day, on-site, 20-hour program. Session: **October 2026**.
- 
+
+### Training Program Attribution
+
+This project was completed as part of the **Advanced Machine Learning Methods (SDA-DSC-211)** course, delivered by **SDAIA Academy via Learning Space** as an intensive 5-day, 20-hour program.
+
+- **Session:** October 2026
+- **Program Reference:** SDAIA Academy on GitHub 
 Training-program reference: [SDAIA Academy on GitHub](https://github.com/SDAIAAcademy).
