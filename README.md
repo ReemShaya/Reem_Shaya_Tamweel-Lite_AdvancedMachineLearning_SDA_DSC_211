@@ -78,7 +78,57 @@ When evaluated on the independent 2,000-application comparison set, all three al
 
 <img width="1722" height="645" alt="222" src="https://github.com/user-attachments/assets/3153f48a-3ab3-47c9-8634-09a9e0b1fafe" />
 
-### Threshold strategy & cost-sensitive policy
+
+---
+ 
+### Day 2 — Honest validation and leakage control
+
+To guarantee realistic out-of-sample performance, features capturing post-decision events (such as `days_past_due_60` and `collection_calls`) were audited and removed. Retaining these leaky variables produced a artificially perfect—and misleading—validation score:
+
+| Validation Scheme | Folds | Validation Rows | ROC-AUC (Mean ± SD) | Mean AP (± SD) |
+|---|:---:|:---:|:---:|:---:|
+| **Leaky Random Control** | 3 | 10,000 | 0.9999 (±0.0002) | 0.9988 (±0.0014) |
+| **Clean Random Control** | 3 | 10,000 | 0.8010 (±0.0200) | 0.3110 (±0.0293) |
+| **Clean Time + Group (Fixed)** | 3 | 5,039 | **0.7976 (±0.0206)** | **0.3153 (±0.0426)** |
+| **Clean Time + Group (Tuned)** | 3 | 5,039 | 0.7855 (±0.0232) | 0.3133 (±0.0259) |
+
+*Key Insights:*
+- **Data Leakage Mitigation:** Removing post-decision features corrected the target leakage, dropping AP from a fake `0.9988` to a realistic ~`0.311`.
+- **Temporal & Customer Isolation:** The honest evaluation scheme (`clean_time_group`) prevents data spillover by isolating distinct customer groups and enforcing a mandatory 90-day label maturation window before validation.
+- **Hyperparameter Search:** The bounded Optuna search (`0.3133` AP) did not yield an improvement over the default fixed parameter baseline (`0.3153` AP). Consequently, the simpler fixed-parameter setup was selected for production efficiency.
+
+<img width="1453" height="565" alt="444" src="https://github.com/user-attachments/assets/75634129-c946-4a93-afe5-75761b69be60" />
+
+### Day 3 — Cost-sensitive threshold under capacity
+
+The operational threshold was evaluated under varying false-negative penalty weights ($FN = 8, 10, 12$) against a strict 12% review capacity constraint, followed by a regional stability audit.
+
+| FN Penalty Weight | FP Cost Unit | Capacity Fraction | Optimal Threshold | Flagged Applications | Default Recall | Loss Units | Feasible (<12%)? |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **8.0** | 1.0 | 12% | **0.6583** | 526 | 40.89% | 2,185.0 | **Yes (True)** |
+| **10.0** | 1.0 | 12% | **0.6583** | 526 | 40.89% | 2,639.0 | **Yes (True)** |
+| **12.0** | 1.0 | 12% | **0.6583** | 526 | 40.89% | 3,093.0 | **Yes (True)** |
+
+#### Regional Capacity & Stability Audit
+
+When deploying the chosen threshold (`0.6583`) across geographic sectors, the application flag rate remained strictly compliant with internal bandwidth constraints:
+
+| Region | Applications | Positives | Flagged | False Positives | True Positives | FPR | Default Recall | Capacity Compliant? |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Central** | 1,184 | 96 | 131 | 88 | 43 | 8.09% | 44.79% | **Yes** (11.06%) |
+| **Western** | 1,262 | 104 | 132 | 96 | 36 | 8.29% | 34.62% | **Yes** (10.46%) |
+| **Eastern** | 1,295 | 103 | 131 | 92 | 39 | 7.72% | 37.86% | **Yes** (10.12%) |
+| **Other** | 1,298 | 81 | 132 | 93 | 39 | 7.64% | 48.15% | **Yes** (10.17%) |
+
+*Key Takeaways:*
+- **Capacity-Driven Threshold:** The decision threshold locked in at `0.6583` regardless of changes to the loss weight (FN = 8, 10, or 12). This demonstrates that team capacity (12% cap), rather than loss tuning, is the primary binding constraint.
+- **Feasible Execution:** At this operating point, exactly **526 applications** were flagged (within capacity) achieving an overall **40.89% default recall**.
+- **Geographic Consistency:** Operational flag rates remained well within limits across all four territories (10.1%–11.1%), proving that the policy is fair and stable across regions.
+
+<img width="1333" height="493" alt="555" src="https://github.com/user-attachments/assets/383d6666-bb3d-48b4-b7b0-952565e2a8a3" />
+
+
+### Threshold strategy & cost-sensitive policy ------- lab 5
 
 Operating thresholds were evaluated against the internal manual review capacity constraint (capped at 12% max review rate).
 
